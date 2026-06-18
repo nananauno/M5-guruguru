@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sprite Sheet Splitter</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    background: #0f0f1a; 
+    color: #e0e0ff; 
+    padding: 20px; 
+    text-align: center; 
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 { color: #a0a0ff; margin-bottom: 10px; }
+  canvas { 
+    border: 2px solid #555577; 
+    background: #1a1a2a; 
+    margin: 10px; 
+    image-rendering: pixelated; 
+    border-radius: 8px;
+  }
+  .preview { 
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px; 
+    justify-content: center; 
+    margin-top: 30px; 
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .sprite { 
+    border: 2px solid #666688; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    transition: all 0.2s;
+  }
+  .sprite:hover { border-color: #a0a0ff; transform: scale(1.05); }
+  .controls { 
+    background: #1a1a2a; 
+    padding: 20px; 
+    border-radius: 12px; 
+    display: inline-block; 
+    margin: 15px; 
+    text-align: left; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  label { display: inline-block; margin: 8px 10px; color: #ccccee; }
+  input[type="range"] { width: 200px; }
+  button { 
+    background: #6677ff; 
+    color: white; 
+    border: none; 
+    padding: 12px 28px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    font-size: 1.1em; 
+    margin-top: 10px;
+  }
+  button:hover { background: #8899ff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Sprite Sheet Splitter</h1>
+  <p>Upload a sprite sheet and split it into individual tiles</p>
+  
+  <input type="file" id="upload" accept="image/*"><br><br>
+  
+  <div class="controls">
+    <label>Columns: <input type="number" id="cols" value="5" style="width:60px"></label>
+    <label>Rows: <input type="number" id="rows" value="5" style="width:60px"></label><br><br>
+    
+    <label>Tile Width (px): <input type="number" id="tileW" value="200" style="width:80px"></label>
+    <label>Tile Height (px): <input type="number" id="tileH" value="200" style="width:80px"></label><br><br>
+    
+    <label>Start X: <input type="range" id="startX" min="0" max="1000" value="0"> 
+    <input type="number" id="startX_num" value="0" style="width:70px"></label><br>
+    
+    <label>Start Y: <input type="range" id="startY" min="0" max="1000" value="0"> 
+    <input type="number" id="startY_num" value="0" style="width:70px"></label><br>
+    
+    <label>X Offset: <input type="range" id="offsetX" min="0" max="100" value="0"> 
+    <input type="number" id="offsetX_num" value="0" style="width:70px"></label><br>
+    
+    <label>Y Offset: <input type="range" id="offsetY" min="0" max="100" value="0"> 
+    <input type="number" id="offsetY_num" value="0" style="width:70px"></label>
+  </div>
+  
+  <button onclick="splitImage()">Split Sprites</button>
+
+  <div id="original"></div>
+  <div id="previews" class="preview"></div>
+</div>
+
+<script>
+let img = new Image();
+let origCanvas, ctx;
+
+const ids = ['cols','rows','tileW','tileH','startX','startY','offsetX','offsetY'];
+
+ids.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateGrid);
+});
+
+['startX_num','startY_num','offsetX_num','offsetY_num'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', () => {
+      const baseId = id.replace('_num','');
+      document.getElementById(baseId).value = el.value;
+      updateGrid();
+    });
+  }
+});
+
+document.getElementById('upload').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    img.onload = () => {
+      document.getElementById('original').innerHTML = `
+        <h3>Original Image (${img.width}×${img.height})</h3>
+        <canvas id="origCanvas" width="${img.width}" height="${img.height}"></canvas>`;
+      
+      origCanvas = document.getElementById('origCanvas');
+      ctx = origCanvas.getContext('2d');
+      updateGrid();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function updateGrid() {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, origCanvas.width, origCanvas.height);
+  ctx.drawImage(img, 0, 0);
+  
+  const cols = parseInt(document.getElementById('cols').value);
+  const rows = parseInt(document.getElementById('rows').value);
+  const tileW = parseInt(document.getElementById('tileW').value);
+  const tileH = parseInt(document.getElementById('tileH').value);
+  const startX = parseInt(document.getElementById('startX').value);
+  const startY = parseInt(document.getElementById('startY').value);
+  const offsetX = parseInt(document.getElementById('offsetX').value);
+  const offsetY = parseInt(document.getElementById('offsetY').value);
+
+  ctx.strokeStyle = '#8899ff';
+  ctx.lineWidth = 2;
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const sx = startX + x * (tileW + offsetX);
+      const sy = startY + y * (tileH + offsetY);
+      ctx.strokeRect(sx, sy, tileW, tileH);
+    }
+  }
+  
+  document.getElementById('startX_num').value = startX;
+  document.getElementById('startY_num').value = startY;
+  document.getElementById('offsetX_num').value = offsetX;
+  document.getElementById('offsetY_num').value = offsetY;
+}
+
+function splitImage() {
+  const cols = parseInt(document.getElementById('cols').value);
+  const rows = parseInt(document.getElementById('rows').value);
+  const tileW = parseInt(document.getElementById('tileW').value);
+  const tileH = parseInt(document.getElementById('tileH').value);
+  const startX = parseInt(document.getElementById('startX').value);
+  const startY = parseInt(document.getElementById('startY').value);
+  const offsetX = parseInt(document.getElementById('offsetX').value);
+  const offsetY = parseInt(document.getElementById('offsetY').value);
+
+  const container = document.getElementById('previews');
+  container.innerHTML = '';
+
+  if (!img.src) {
+    alert("Please upload an image first.");
+    return;
+  }
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = tileW;
+      canvas.height = tileH;
+      canvas.className = 'sprite';
+      
+      const ctx2 = canvas.getContext('2d');
+      const sx = startX + x * (tileW + offsetX);
+      const sy = startY + y * (tileH + offsetY);
+      
+      ctx2.drawImage(img, sx, sy, tileW, tileH, 0, 0, tileW, tileH);
+
+      canvas.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = `sprite_${String(y).padStart(2,0)}_${String(x).padStart(2,0)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+
+      container.appendChild(canvas);
+    }
+  }
+}
+</script>
+</body>
+</html>
