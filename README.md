@@ -16,6 +16,11 @@ Image preparation: Please refer to @rotejin's [tomari-guruguru](https://github.c
 3. Upload your sprite sheet and adjust the grid settings.
 4. Click **Split Sprites** to generate individual images.
 5. Download the sliced images and rename them as `dir0.png` to `dir8.png`.
+6. Open `src/main.cpp` and update the image size constants to match your images:
+   ```cpp
+   const int WIDTH = 251;   // Image width in pixels
+   const int HEIGHT = 240;  // Image height in pixels
+   ```
 
 *Image mapping:*
 - `dir0`: Top-Left
