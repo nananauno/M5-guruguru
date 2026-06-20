@@ -6,6 +6,9 @@ A cute animated character that follows your finger (touch) on the M5Stack StopWa
 
 Inspired by @rotejin's tomari-guruguru project.
 
+> **Note:** The face tracking logic has been extracted into a reusable library.
+> If you want to use it in your own project, check out [M5GuruguruAvatar](https://github.com/nananauno/M5GuruguruAvatar).
+
 ## How to Use
 
 ### Preparing Character Images
